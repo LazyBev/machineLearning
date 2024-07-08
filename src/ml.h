@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 #include <math.h>
 #include <time.h>
 
@@ -28,7 +30,7 @@ void initialize_weights_biases(double** W, double** b);           // Initialize 
 void forward(double* X, double** W, double** b, double** a);      // Forward propagation
 void backward(double* X, double** W, double** b, double** a, double* y_true);  // Backward propagation
 void training(double X[][2], double y_true[][1], double** W, double** b);  // Training the neural network
-void test(double X[][2], double y_true[][1], double** W, double** b);  // Testing the neural network
+void test(double X[][2], double y_true[][1], double** W, double** b, bool save);  // Testing the neural network
 
 // Sigmoid activation function
 double sigmoid(double x) {
@@ -105,16 +107,6 @@ void setParams(int num_layers, int layers[], double learning_rate, int epochs) {
 // Initialize weights and biases with random values
 void initialize_weights_biases(double** W, double** b) {
     for (int i = 0; i < _NUM_LAYERS - 1; i++) {
-        W[i] = (double*)malloc(_LAYERS[i] * _LAYERS[i + 1] * sizeof(double));
-        if (W[i] == NULL) {
-            fprintf(stderr, "Failed to allocate memory for W[%d]\n", i);
-            exit(EXIT_FAILURE);
-        }
-        b[i] = (double*)malloc(_LAYERS[i + 1] * sizeof(double));
-        if (b[i] == NULL) {
-            fprintf(stderr, "Failed to allocate memory for b[%d]\n", i);
-            exit(EXIT_FAILURE);
-        }
         for (int j = 0; j < _LAYERS[i] * _LAYERS[i + 1]; j++) {
             W[i][j] = ((double)rand() / RAND_MAX) * 2 - 1;
         }
@@ -261,7 +253,7 @@ void training(double X[][2], double y_true[][1], double** W, double** b) {
 }
 
 // Testing the neural network
-void test(double X[][2], double y_true[][1], double** W, double** b) {
+void test(double X[][2], double y_true[][1], double** W, double** b, bool save) {
     double** a = (double**)malloc(_NUM_LAYERS * sizeof(double*));
     if (a == NULL) {
         fprintf(stderr, "Failed to allocate memory for a\n");
@@ -275,12 +267,30 @@ void test(double X[][2], double y_true[][1], double** W, double** b) {
         }
     }
 
+    FILE *file = NULL;
+    if (save) {
+        file = fopen("data.txt", "a");
+        if (file == NULL) {
+            fprintf(stderr, "Failed to open file for writing\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
     for (int i = 0; i < 4; i++) {
         // Forward propagation
         forward(X[i], W, b, a);
-        
+
         // Print results
         printf("Input: %f %f, Predicted: %f, True: %f\n", X[i][0], X[i][1], a[_NUM_LAYERS - 1][0], y_true[i][0]);
+        
+        // Save results to file if needed
+        if (save && file != NULL) {
+            fprintf(file, "Input: %f %f, Predicted: %f, True: %f\n", X[i][0], X[i][1], a[_NUM_LAYERS - 1][0], y_true[i][0]);
+        }
+    }
+
+    if (file != NULL) {
+        fclose(file);
     }
 
     // Free allocated memory
