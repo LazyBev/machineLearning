@@ -44,7 +44,7 @@ int main() {
 
     // Test the neural network
     printf("\nTesting the neural network:\n");
-    test(X, y_true, params.W, params.b);
+    test(X, y_true, params.W, params.b, true);
 
     // Free allocated memory
     free_params(params, num_layers);
